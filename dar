@@ -1,0 +1,256 @@
+#! /bin/bash
+
+#CourseWork for Bridging by Sergio Garcia Santillana
+#Edinburgh Napier University Student Number: 40136235
+
+#Functions
+
+#this functions shows the logo of the script
+function logo {
+clear
+echo
+echo "
+    ╔═══════════════════════════════════════════════════════════════════════╗ 
+    ║  ╔═╦═════════════════════════════════════════════════════════════╦═╗  ║
+    ║  ║ ║                                                             ║ ║  ║
+    ║  ║ ║           ▒▒▒▒▒▒           ▒▒        ▒▒▒▒▒▒▒                ║ ║  ║  
+    ║  ║ ║           ▒▒▒▒▒▒▒         ▒▒▒▒       ▒▒▒▒▒▒▒▒▒              ║ ║  ║
+    ║  ║ ║           ▒▒▒  ▒▒▒▒      ▒▒▒▒▒▒      ▒▒▒▒  ▒▒▒▒             ║ ║  ║
+    ║  ║ ║           ▒▒▒    ▒▒▒    ▒▒▒  ▒▒▒     ▒▒▒▒  ▒▒▒              ║ ║  ║
+    ║  ║ ║           ▒▒▒    ▒▒▒    ▒▒▒  ▒▒▒     ▒▒▒▒▒▒▒▒               ║ ║  ║
+    ║  ║ ║           ▒▒▒   ▒▒▒     ▒▒▒▒▒▒▒▒     ▒▒▒▒ ▒▒▒▒              ║ ║  ║
+    ║  ║ ║           ▒▒▒▒▒▒▒      ▒▒▒▒  ▒▒▒▒    ▒▒▒▒  ▒▒▒▒             ║ ║  ║
+    ║  ║ ║           ▒▒▒▒▒▒       ▒▒▒▒  ▒▒▒▒    ▒▒▒▒   ▒▒▒▒            ║ ║  ║
+    ║  ║ ║                                                             ║ ║  ║
+    ║  ║ ║                  The Articule Organizer                     ║ ║  ║
+    ║  ╚═╩═════════════════════════════════════════════════════════════╩═╝  ║
+    ║  ╔═╦═════════════════════════════════════════════════════════════╦═╗  ║
+    ║  ║ ║           By: Sergio Garcia Santillana                      ║ ║  ║
+    ║  ║ ║               Napier Student Number: 40136235               ║ ║  ║
+    ║  ╚═╩═════════════════════════════════════════════════════════════╩═╝  ║
+    ╚═══════════════════════════════════════════════════════════════════════╝
+"
+echo 
+}
+
+#End of functions
+
+#Start of Main
+
+# show logo
+logo
+
+#first check that arguments exists
+# '$1' is the source directory
+# '$2' is the destiny directory
+
+#is any argument empty?
+if [ -n "$1" ] && [ -n "$2" ]; then
+	# this is what is done in case of have the 2 arguments
+	echo The source directory is: $1
+	echo the destiny directory is: $2
+	echo 
+else
+	# if one of them is missing (or both) a message will be shown and the script finished
+	echo Usage: dar doc_path archive_path
+	exit #this will finish the script
+fi
+
+if [ -d "$1" ]; then
+	#first we check if the source directory exists in case of exist we will show a message saying that exist keep checking 
+	echo The Source Directory Inserted Exists
+	echo The system is going to check if the Destiny exists
+
+	# check if the destiny exists
+	if [ -d "$2" ]; then
+		echo The Directory Inserted Exists
+		echo
+		echo now the files should be copied
+		for file in $1/* #we will check every file in the directory provided
+		do
+			# we divide the file name in the file name (no path no extension), the extension and the path
+			filename=$(basename "$file")
+			extension="${filename##*.}"  #the extension
+			filename="${filename%.*}"    # the filename without path and extension
+			directory=$(dirname "$file") # the extension
+
+			case $extension in
+				"doc") #we only check the .doc here, the case of the docs we don't check if there is any file in the source with
+					# with the same name, as in case of existing the doc will be the one to keep
+
+					if [ -e "$2/$filename.doc" ] ; then #here we check if there is any file with the same name in the destiny
+
+						if  cmp $file $2/$filename.doc	#comparing if the files are the same to avoid keeping copies
+						then
+							# if is the same we won't copy
+						  echo identico
+						else	
+							# if is diferent we will check how many files are with the same name, we check up to 1000
+							# copies (the original and up to 999)and the new file is renamed to the original name _ and 
+							# the number ex: test.doc --> test_1.doc
+
+						cp $file $2/$filename"_"$(find $2 \( -name $filename'_'?'.'$extension -or -name $filename'.'$extension -or -name $filename'_'??'.'$extension -or -name $filename'_'???'.'$extension \) | wc -l)"."$extension
+						fi
+				
+					else
+						# as there is not files with the same name we copy it
+						cp $file $2/$filename"."$extension
+					fi
+				;;
+				"pdf") #we only check the .pdf here
+					if [ -e "$directory/$filename.doc" ] ; then # we check if there is any docs in the source directory with
+										    # the same name, in case of existing we keep the doc not the pdf
+						echo doc available
+					else
+						#now we check if the destiny dir there is any files called the same
+						if [ -e "$2/$filename.pdf" ] ; then
+
+							if  cmp $file $2/$filename.pdf # now we check if the file is identical 
+							then
+								echo there is already a copy saved 
+							else
+								# as is different we check the amount of files and we rename the file when copying
+								cp $file $2/$filename"_"$(find $2 \( -name $filename'_'?'.'$extension -or -name $filename'.'$extension -or -name $filename'_'??'.'$extension -or -name $filename'_'???'.'$extension \) | wc -l)"."$extension
+							fi
+				
+						else
+							# if there is not files with the same name we copy the file without rename
+							cp $file $2/$filename"."$extension
+						fi
+					fi
+				;;
+				"PDF") #we only check the .PDF here
+					if [ -e "$directory/$filename.doc" ] ; then
+						echo doc available
+					else
+						#now we check if the destiny dir there is any files called the same
+						if [ -e "$2/$filename.PDF" ] ; then
+
+							if  cmp $file $2/$filename.PDF # now we check if the file is identical 
+							then
+								echo there is already a copy saved 
+							else
+								# copying the file renaming it
+								cp $file $2/$filename"_"$(find $2 \( -name $filename'_'?'.'$extension -or -name $filename'.'$extension -or -name $filename'_'??'.'$extension -or -name $filename'_'???'.'$extension \) | wc -l)"."$extension
+							fi
+				
+					else
+						#with no file on destiny with the same name we copy the file
+						cp $file $2/$filename"."$extension
+					fi
+					fi
+				;;
+				*)
+				;;
+			esac
+		done
+	else
+		# if the destiny directory doesn't exist we will create it
+
+		echo The directory inserted does not exists
+		echo The system will create it
+
+		mkdir $2 #creating the destiny directory
+
+		if [ -d "$2" ]; then #checking that has been created succesfully 
+
+			echo The directory $2 has been created
+			echo
+			echo now the files should be copied
+			for file in $1/*
+			do
+
+			# we divide the file name in the file name (no path no extension), the extension and the path
+			filename=$(basename "$file")
+			extension="${filename##*.}"  #the extension
+			filename="${filename%.*}"    # the filename without path and extension
+			directory=$(dirname "$file") # the extension
+
+			case $extension in
+				"doc") #we only check the .doc here, the case of the docs we don't check if there is any file in the source with
+					# with the same name, as in case of existing the doc will be the one to keep
+
+					if [ -e "$2/$filename.doc" ] ; then #here we check if there is any file with the same name in the destiny
+
+						if  cmp $file $2/$filename.doc	#comparing if the files are the same to avoid keeping copies
+						then
+							# if is the same we won't copy
+						  echo identico
+						else	
+							# if is diferent we will check how many files are with the same name, we check up to 1000
+							# copies (the original and up to 999)and the new file is renamed to the original name _ and 
+							# the number ex: test.doc --> test_1.doc
+
+						cp $file $2/$filename"_"$(find $2 \( -name $filename'_'?'.'$extension -or -name $filename'.'$extension -or -name $filename'_'??'.'$extension -or -name $filename'_'???'.'$extension \) | wc -l)"."$extension
+						fi
+				
+					else
+						# as there is not files with the same name we copy it
+						cp $file $2/$filename"."$extension
+					fi
+				;;
+				"pdf") #we only check the .pdf here
+					if [ -e "$directory/$filename.doc" ] ; then # we check if there is any docs in the source directory with
+										    # the same name, in case of existing we keep the doc not the pdf
+						echo doc available
+					else
+						#now we check if the destiny dir there is any files called the same
+						if [ -e "$2/$filename.pdf" ] ; then
+
+							if  cmp $file $2/$filename.pdf # now we check if the file is identical 
+							then
+								echo there is already a copy saved 
+							else
+								# as is different we check the amount of files and we rename the file when copying
+								cp $file $2/$filename"_"$(find $2 \( -name $filename'_'?'.'$extension -or -name $filename'.'$extension -or -name $filename'_'??'.'$extension -or -name $filename'_'???'.'$extension \) | wc -l)"."$extension
+							fi
+				
+						else
+							# if there is not files with the same name we copy the file without rename
+							cp $file $2/$filename"."$extension
+						fi
+					fi
+				;;
+				"PDF") #we only check the .PDF here
+					if [ -e "$directory/$filename.doc" ] ; then
+						echo doc available
+					else
+						#now we check if the destiny dir there is any files called the same
+						if [ -e "$2/$filename.PDF" ] ; then
+
+							if  cmp $file $2/$filename.PDF # now we check if the file is identical 
+							then
+								echo there is already a copy saved 
+							else
+								# copying the file renaming it
+								cp $file $2/$filename"_"$(find $2 \( -name $filename'_'?'.'$extension -or -name $filename'.'$extension -or -name $filename'_'??'.'$extension -or -name $filename'_'???'.'$extension \) | wc -l)"."$extension
+							fi
+				
+					else
+						#with no file on destiny with the same name we copy the file
+						cp $file $2/$filename"."$extension
+					fi
+					fi
+				;;
+				*)
+				;;
+			esac
+			done
+		else
+			#if by any chance the directory wasn't possible to be created the script will show a message and finish
+			
+			echo unable to create the directory
+			echo
+			exit # finish the script
+		fi
+	fi
+ 
+else
+	# if the source does not existe we show a message saying it and we finish the script
+	echo Source directory does not exist
+	echo 
+	exit # finish the script
+fi
+
+# End of Main
+
